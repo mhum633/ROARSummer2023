@@ -12,7 +12,7 @@ class VehicleControl(BaseModel):
     gear: int = Field(default=1)
 
     @staticmethod
-    def clamp(n, minn, maxn):
+    def clamp(n, minn, maxn):  # return middle value
         return max(min(maxn, n), minn)
 
     def get_throttle(self) -> float:
@@ -27,7 +27,7 @@ class VehicleControl(BaseModel):
         Cap it between -1  and 1
         :return:
         """
-        return self.clamp(self.steering, -1, 1)
+        return self.clamp(self.steering, -2, 2)
 
     def to_array(self) -> np.ndarray:
         return np.array([self.throttle, self.steering])
@@ -40,7 +40,7 @@ class VehicleControl(BaseModel):
 
     @staticmethod
     def fromBytes(data: bytes):
-        data = data.decode('utf-8').split(',')
+        data = data.decode("utf-8").split(",")
         return VehicleControl(throttle=float(data[0]), steering=float(data[1]))
 
 
@@ -69,12 +69,20 @@ class Vehicle(BaseModel):
             :return: speed as a float in Km/h
         """
         vel = vehicle.velocity
-        return 3.6 * math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2)
+        return 3.6 * math.sqrt(vel.x**2 + vel.y**2 + vel.z**2)
 
     def to_array(self) -> np.ndarray:
-        return np.concatenate([self.transform.to_array(), self.velocity.to_array(), self.acceleration.to_array(),
-                               self.control.to_array()])
+        return np.concatenate(
+            [
+                self.transform.to_array(),
+                self.velocity.to_array(),
+                self.acceleration.to_array(),
+                self.control.to_array(),
+            ]
+        )
 
     def __repr__(self):
-        return f"Location: {self.transform.location.__str__()} | Rotation: {self.transform.rotation.__str__()} | " \
-               f"Velocity: {self.velocity.__str__()} | Acceleration: {self.acceleration.__str__()}"
+        return (
+            f"Location: {self.transform.location.__str__()} | Rotation: {self.transform.rotation.__str__()} | "
+            f"Velocity: {self.velocity.__str__()} | Acceleration: {self.acceleration.__str__()}"
+        )

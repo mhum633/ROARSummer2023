@@ -50,6 +50,14 @@ class PIDFastController(Controller):
                 )
                 self.waypoint_queue_region.append(waypoint)
 
+        rawr = "2158.112060546875,121.14097595214844,3418.892333984375,1.4226536750793457,4.3081278800964355,-151.0590209".split(
+            ","
+        )
+        self.temp = Transform(
+            location=Location(x=rawr[0], y=rawr[1], z=rawr[2]),
+            rotation=Rotation(pitch=rawr[3], yaw=rawr[4], roll=rawr[5]),
+        )
+
         self.waypoint_queue_braking = []
         with open("ROAR\\control_module\\braking_list_mod.txt") as f:
             for line in f:
@@ -98,7 +106,7 @@ class PIDFastController(Controller):
         pitch = float(next_waypoint.record().split(",")[4])
 
         if self.region == 1:
-            if sharp_error < 0.68 or current_speed <= 115:
+            if sharp_error < 0.69 or current_speed <= 110:
                 throttle = 1
                 brake = 0
             else:
@@ -117,10 +125,12 @@ class PIDFastController(Controller):
                 self.brake_counter += 1
                 if self.brake_counter >= 4:
                     self.brake_counter = 0
-            elif sharp_error >= 0.69 and current_speed > 85:
+            elif sharp_error >= 0.69 and current_speed > 82:
                 throttle = 0
-                brake = 0.5
-            elif wide_error > 0.13 and current_speed > 98:  # wide turn 0.09
+                brake = 0.4  # 0.4, 0.5
+            elif (
+                wide_error > 0.1 and current_speed > 98
+            ):  # wide turn 0.09, speed 98, 0.1 and 102
                 throttle = max(
                     0, 1 - 6 * pow(wide_error + current_speed * 0.003, 6)
                 )  # 0.003
@@ -129,7 +139,11 @@ class PIDFastController(Controller):
                 throttle = 1
                 brake = 0
 
+        tempdist = self.agent.vehicle.transform.location.distance(self.temp.location)
         gear = max(1, (int)((current_speed - 2 * pitch) / 60))
+        if tempdist <= 40 and tempdist >= 10 and current_speed > 85:
+            brake = 1
+            throttle = -1
         if throttle == -1:
             gear = -1
 
@@ -148,7 +162,7 @@ class PIDFastController(Controller):
     @staticmethod
     def find_k_values(vehicle: Vehicle, config: dict) -> np.array:
         current_speed = Vehicle.get_speed(vehicle=vehicle)
-        k_p, k_d, k_i = 4, -2, 4
+        k_p, k_d, k_i = 4, 0.25, 2.75  # 1,0,0
         for speed_upper_bound, kvalues in config.items():
             speed_upper_bound = float(speed_upper_bound)
             if current_speed < speed_upper_bound:
@@ -199,7 +213,14 @@ class LatPIDController(Controller):
         )
         v_end = v_begin + direction_vector
 
-        v_vec = np.array([(v_end[0] - v_begin[0]), 0, (v_end[2] - v_begin[2])])
+        # v_vec = np.array([(v_end[0] - v_begin[0]), 0, (v_end[2] - v_begin[2])])
+        v_vec = direction_vector
+        """
+        from line #750, direction_vector = <-0.17, 0, 0.99>
+        v_begin = <1914.723685,80.93864441,4167.996546>
+        v_end 
+
+        """
 
         # calculate error projection
         w_vec = np.array(

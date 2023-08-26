@@ -13,18 +13,22 @@ from ROAR.agent_module.pid_fast_agent import PIDFastAgent
 
 def main(args):
     """Starts game loop"""
-    agent_config = AgentConfig.parse_file(Path("./ROAR/configurations/carla/carla_agent_configuration.json"))
-    carla_config = CarlaConfig.parse_file(Path("./ROAR_Sim/configurations/configuration.json"))
+    agent_config = AgentConfig.parse_file(
+        Path("./ROAR/configurations/carla/carla_agent_configuration.json")
+    )
+    carla_config = CarlaConfig.parse_file(
+        Path("./ROAR_Sim/configurations/configuration.json")
+    )
 
-    carla_runner = CarlaRunner(carla_settings=carla_config,
-                               agent_settings=agent_config,
-                               npc_agent_class=PurePursuitAgent)
+    carla_runner = CarlaRunner(
+        carla_settings=carla_config,
+        agent_settings=agent_config,
+        npc_agent_class=PurePursuitAgent,
+    )
     try:
         my_vehicle = carla_runner.set_carla_world()
-        agent = PIDFastAgent(vehicle=my_vehicle,
-                         agent_settings=agent_config)
-        carla_runner.start_game_loop(agent=agent,
-                                     use_manual_control=not args.auto)
+        agent = PIDFastAgent(vehicle=my_vehicle, agent_settings=agent_config)
+        carla_runner.start_game_loop(agent=agent, use_manual_control=not args.auto)
 
     except Exception as e:
         logging.error(f"Something bad happened during initialization: {e}")
@@ -33,16 +37,19 @@ def main(args):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s '
-                               '- %(message)s',
-                        datefmt="%H:%M:%S",
-                        level=logging.DEBUG)
+    logging.basicConfig(
+        format="%(levelname)s - %(asctime)s - %(name)s " "- %(message)s",
+        datefmt="%H:%M:%S",
+        level=logging.DEBUG,
+    )
     logging.getLogger(" streaming client").setLevel(logging.WARNING)
     import warnings
 
     warnings.filterwarnings("ignore", module="carla")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--auto", type=str2bool, default=True, help="True to use auto control")
+    parser.add_argument(
+        "--auto", type=str2bool, default=False, help="True to use auto control"
+    )
 
     warnings.filterwarnings("ignore", module="carla")
     args = parser.parse_args()
