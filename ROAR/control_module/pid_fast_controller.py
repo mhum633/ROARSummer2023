@@ -125,11 +125,11 @@ class PIDFastController(Controller):
                 self.brake_counter += 1
                 if self.brake_counter >= 4:
                     self.brake_counter = 0
-            elif sharp_error >= 0.69 and current_speed > 82:
+            elif sharp_error >= 0.685 and current_speed > 83:
                 throttle = 0
-                brake = 0.4  # 0.4, 0.5
+                brake = 0.45  # 0.4, 0.5
             elif (
-                wide_error > 0.1 and current_speed > 98
+                wide_error > 0.1 and current_speed > 102
             ):  # wide turn 0.09, speed 98, 0.1 and 102
                 throttle = max(
                     0, 1 - 6 * pow(wide_error + current_speed * 0.003, 6)
@@ -141,7 +141,7 @@ class PIDFastController(Controller):
 
         tempdist = self.agent.vehicle.transform.location.distance(self.temp.location)
         gear = max(1, (int)((current_speed - 2 * pitch) / 60))
-        if tempdist <= 40 and tempdist >= 10 and current_speed > 85:
+        if tempdist <= 45 and tempdist >= 15 and current_speed > 80:
             brake = 1
             throttle = -1
         if throttle == -1:
